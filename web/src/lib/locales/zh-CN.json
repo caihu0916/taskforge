@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "TaskForge",
+    "tagline": "AI Agent 操作系统 — 面向一人公司",
+    "loading": "加载中...",
+    "error": "出错了",
+    "retry": "重试",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "confirm": "确认",
+    "back": "返回"
+  },
+  "authPage": {
+    "title": "登录",
+    "username": "用户名",
+    "password": "密码",
+    "submit": "登录",
+    "noAccount": "还没有账号？"
+  },
+  "dashboardPage": {
+    "title": "仪表盘",
+    "welcome": "欢迎使用 TaskForge",
+    "subtitle": "您的 AI Agent 操作系统"
+  }
+}
