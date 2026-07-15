@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "TaskForge",
+    "tagline": "AI Agent OS for Solo Entrepreneurs",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back"
+  },
+  "authPage": {
+    "title": "Sign In",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign In",
+    "noAccount": "Don't have an account?"
+  },
+  "dashboardPage": {
+    "title": "Dashboard",
+    "welcome": "Welcome to TaskForge",
+    "subtitle": "Your AI Agent Operating System"
+  }
+}
