@@ -1,0 +1,61 @@
+id: customer_followup
+name: 客户跟进
+description: CRM客户跟进流程——联系记录→需求分析→下一步行动
+category: crm
+scenario: office
+version: "1.0"
+
+variables:
+  customer_name: 示例客户
+  contact_channel: 微信
+  last_contact: "2026-06-15"
+
+roles:
+  - support
+  - researcher
+  - butler
+
+phases:
+  plan:
+    steps:
+      - name: review_history
+        type: llm_call
+        prompt: |
+          回顾客户{customer_name}的历史互动:
+          上次联系: {last_contact}
+          渠道: {contact_channel}
+          生成客户画像摘要
+        role: researcher
+        output_key: customer_profile
+        next: contact
+  do:
+    steps:
+      - name: contact
+        type: llm_call
+        prompt: |
+          拟定本次跟进话术:
+          客户画像: {customer_profile}
+          渠道: {contact_channel}
+          生成3个开场白选项
+        role: support
+        output_key: contact_script
+        next: analyze_needs
+      - name: analyze_needs
+        type: llm_call
+        prompt: |
+          基于客户画像分析潜在需求:
+          画像: {customer_profile}
+          生成需求清单 + 优先级
+        role: researcher
+        output_key: needs_analysis
+        next: output
+  act:
+    steps:
+      - name: output
+        type: output
+        prompt: |
+          客户跟进输出:
+          画像: {customer_profile}
+          话术: {contact_script}
+          需求: {needs_analysis}
+        output_key: followup_result

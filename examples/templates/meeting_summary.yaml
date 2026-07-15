@@ -1,0 +1,61 @@
+id: meeting_summary
+name: 会议纪要
+description: 会议纪要自动生成——转录→要点提取→行动项分配
+category: office
+scenario: office
+version: "1.0"
+
+variables:
+  meeting_topic: 项目周会
+  meeting_date: "2026-07-01"
+  participants: "张三,李四,王五"
+
+roles:
+  - butler
+  - support
+
+phases:
+  plan:
+    steps:
+      - name: setup
+        type: llm_call
+        prompt: |
+          会议基本信息:
+          主题: {meeting_topic}
+          日期: {meeting_date}
+          参会人: {participants}
+          生成会议议程模板
+        role: butler
+        output_key: agenda
+        next: extract
+  do:
+    steps:
+      - name: extract
+        type: llm_call
+        prompt: |
+          基于议程提取会议要点:
+          议程: {agenda}
+          生成3-5个讨论要点
+        role: support
+        output_key: key_points
+        next: actions
+      - name: actions
+        type: llm_call
+        prompt: |
+          基于要点分配行动项:
+          要点: {key_points}
+          参会人: {participants}
+          生成行动项清单(负责人/截止日)
+        role: butler
+        output_key: action_items
+        next: output
+  act:
+    steps:
+      - name: output
+        type: output
+        prompt: |
+          会议纪要输出:
+          议程: {agenda}
+          要点: {key_points}
+          行动项: {action_items}
+        output_key: meeting_minutes

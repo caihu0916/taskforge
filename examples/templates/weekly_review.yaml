@@ -1,0 +1,60 @@
+id: weekly_review
+name: 周度复盘
+description: 个人/团队周度复盘——成就→问题→下周计划
+category: office
+scenario: office
+version: "1.0"
+
+variables:
+  reviewer_name: 示例用户
+  week_number: "W26"
+  highlights: "完成产品发布"
+
+roles:
+  - boss
+  - researcher
+  - butler
+
+phases:
+  plan:
+    steps:
+      - name: gather_facts
+        type: llm_call
+        prompt: |
+          回顾{week_number}周事实:
+          复盘人: {reviewer_name}
+          亮点: {highlights}
+          生成本周事实清单
+        role: researcher
+        output_key: facts
+        next: analyze
+  do:
+    steps:
+      - name: analyze
+        type: llm_call
+        prompt: |
+          分析事实背后的成功因素:
+          事实: {facts}
+          生成3个成功因素 + 3个改进点
+        role: boss
+        output_key: analysis
+        next: plan_next
+      - name: plan_next
+        type: llm_call
+        prompt: |
+          基于分析制定下周计划:
+          分析: {analysis}
+          生成3个下周目标 + 关键行动
+        role: butler
+        output_key: next_week_plan
+        next: output
+  act:
+    steps:
+      - name: output
+        type: output
+        prompt: |
+          周度复盘输出:
+          事实: {facts}
+          分析: {analysis}
+          下周计划: {next_week_plan}
+        output_key: review_report

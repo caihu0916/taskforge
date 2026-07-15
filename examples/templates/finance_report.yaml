@@ -1,0 +1,64 @@
+id: finance_report
+name: 财务报表生成
+description: 月度财务报表自动生成——收入汇总→成本分析→利润预测
+category: finance
+scenario: finance
+version: "1.0"
+
+variables:
+  company_name: 示例公司
+  report_period: "2026年6月"
+  total_revenue: "100000"
+  total_cost: "60000"
+
+roles:
+  - accountant
+  - analyst
+  - butler
+
+phases:
+  plan:
+    steps:
+      - name: data_collect
+        type: llm_call
+        prompt: |
+          为{company_name}整理{report_period}财务数据:
+          总收入: {total_revenue}元
+          总成本: {total_cost}元
+          生成数据汇总表
+        role: accountant
+        output_key: financial_data
+        next: analyze
+  do:
+    steps:
+      - name: analyze
+        type: llm_call
+        prompt: |
+          分析{report_period}财务数据:
+          数据: {financial_data}
+          生成:
+          1. 收入结构分析
+          2. 成本构成分析
+          3. 毛利率计算
+        role: analyst
+        output_key: analysis_result
+        next: forecast
+      - name: forecast
+        type: llm_call
+        prompt: |
+          基于分析结果预测下月财务:
+          分析: {analysis_result}
+          生成下月收入/成本/利润预测
+        role: analyst
+        output_key: forecast_result
+        next: output
+  act:
+    steps:
+      - name: output
+        type: output
+        prompt: |
+          财务报表输出:
+          数据汇总: {financial_data}
+          分析结果: {analysis_result}
+          下月预测: {forecast_result}
+        output_key: final_report

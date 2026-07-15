@@ -1,0 +1,51 @@
+id: content_calendar
+name: 内容日历
+description: 一周内容日历规划——选题→排期→发布提醒
+category: marketing
+scenario: content
+version: "1.0"
+
+variables:
+  brand_name: 示例品牌
+  week_start: "2026-07-01"
+  channels: "小红书,公众号,抖音"
+
+roles:
+  - content_strategist
+  - butler
+
+phases:
+  plan:
+    steps:
+      - name: brainstorm_topics
+        type: llm_call
+        prompt: |
+          为{brand_name}生成本周选题:
+          周: {week_start}
+          渠道: {channels}
+          生成10个选题方向
+        role: content_strategist
+        output_key: topics
+        next: schedule
+  do:
+    steps:
+      - name: schedule
+        type: llm_call
+        prompt: |
+          为选题排期:
+          选题: {topics}
+          起始日: {week_start}
+          渠道: {channels}
+          生成7天内容日历表
+        role: content_strategist
+        output_key: calendar
+        next: output
+  act:
+    steps:
+      - name: output
+        type: output
+        prompt: |
+          内容日历输出:
+          选题: {topics}
+          日历: {calendar}
+        output_key: final_calendar

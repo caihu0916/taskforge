@@ -1,0 +1,66 @@
+# Hard Limits 配置 — Fable 5 copyright_style_hard_limits
+#
+# AGENT-016 安全策略:
+#   - 生产环境此文件应设为只读 (chmod 0440 / Windows ACL)
+#   - 启动时校验期望 SHA256 (环境变量 TF_HARD_LIMITS__EXPECTED_SHA256)
+#   - 未配置规则默认 deny (passed=False, action=BLOCK)
+#
+# 修改此文件后, 必须重新计算 SHA256 并更新环境变量:
+#   python -c "import hashlib; print(hashlib.sha256(open('src/engine/agent/hard_limits.yaml','rb').read()).hexdigest())"
+
+#── 财务限额 ──
+finance:
+  self_approve_max: 500            #单笔自批上限(¥), 超限提交审批
+  collection_escalate: 10000       #催款超此金额升级掌柜
+  difference_investigate: 50       #差异超此金额必须调查
+  refund_approve: 200              #退款超此金额需审批
+
+#── 风险阈值 ──
+risk_thresholds:
+  invoice:
+    no_receipt_ratio_warning: 30   #无发票比例告警(%)
+    no_receipt_ratio_redline: 50   #无发票比例红线(%)
+  fund:
+    receivable_overdue_days: 180   #应收逾期天数红线
+
+#── Agent 安全 ──
+agent_safety:
+  max_repeats: 5                   #同参数重复调用上限
+  max_failures: 5                  #同工具失败上限
+  max_no_progress: 5               #无进展轮数上限
+  max_tool_calls_per_turn: 50      #单轮工具调用上限
+  max_consecutive_denials: 3       #连续权限拒绝上限
+  max_total_denials: 20            #累计权限拒绝上限
+  max_code_execution_time: 30      #代码节点执行超时上限(秒) — Workflow CodeExecutor
+
+#── 代码变更 ──
+code_change:
+  max_changes_per_file: 1          #单文件最大变更处数
+  max_files_per_batch: 10          #单批次最大文件数
+  require_backend_verify: true     #是否要求后端验证
+  batch_script_ban: true           #禁止批量脚本修改业务代码
+
+#── 发布 ──
+publish:
+  require_approval: true           #发布需审批
+
+#── 执行动作 ──
+#key 格式: rule_name 或 over_rule_name
+#动作: alert / warn / block / escalate / hard_stop
+enforcement:
+  finance:
+    self_approve_max: escalate     #自批超限 → 升级人类
+    over_refund_approve: block     #退款超限 → 阻止
+    over_collection_escalate: alert
+    over_difference_investigate: warn
+  agent_safety:
+    over_max_repeats: hard_stop    #重复超限 → 硬停止
+    over_max_failures: hard_stop   #失败超限 → 硬停止
+    over_max_no_progress: warn     #无进展 → 警告
+    over_max_tool_calls_per_turn: block
+  code_change:
+    over_max_changes_per_file: block
+    over_max_files_per_batch: block
+    over_batch_script_ban: hard_stop
+  publish:
+    over_require_approval: block
