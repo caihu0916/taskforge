@@ -68,8 +68,8 @@ Documentation = "https://github.com/caihu0916/taskforge/tree/main/docs"
 Issues = "https://github.com/caihu0916/taskforge/issues"
 
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+requires = ["setuptools>=69.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
