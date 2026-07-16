@@ -71,11 +71,10 @@
         "displayLanguageSelector": true
       },
       "wix": {
-        "languages": [
+        "language": [
           "zh-CN",
           "en-US"
-        ],
-        "displayLanguageSelector": true
+        ]
       }
     },
     "macOS": {
