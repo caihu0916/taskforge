@@ -1,3 +1,14 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '976986ff-129c-4eab-b6c8-67a4924071e9'
+  PropagateID: '976986ff-129c-4eab-b6c8-67a4924071e9'
+  ReservedCode1: 'f9052ee9-f2c8-40d0-8fcc-05042f3683dc'
+  ReservedCode2: 'f9052ee9-f2c8-40d0-8fcc-05042f3683dc'
+---
+
 # TaskForge 开源版
 
 > AI 一人公司操作系统 — 半开源版本地优先, AI 执行, 人类拍板
@@ -84,6 +95,9 @@ BSL 1.1 — 3 年非竞争期后自动转 Apache-2.0。
 
 ## 链接
 
-- [SaaS 平台](https://taskforge.cn)
+- [SaaS 平台](https://cloud.taskos.online)
 - [文档](docs/)
-- [问题追踪](https://github.com/taskforge/taskforge/issues)
+- [问题追踪](https://github.com/caihu0916/taskforge/issues)
+- [桌面下载](https://github.com/caihu0916/taskforge/releases)
+
+> AI生成
