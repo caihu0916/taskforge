@@ -1,0 +1,214 @@
+name: Desktop Build (3 Platforms)
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+      - release/*
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            label: 'Windows x64'
+            artifact_name: 'taskforge-windows-x64'
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            label: 'macOS ARM64'
+            artifact_name: 'taskforge-macos-arm64'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            label: 'macOS x64'
+            artifact_name: 'taskforge-macos-x64'
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
+            label: 'Linux x64'
+            artifact_name: 'taskforge-linux-x64'
+
+    runs-on: ${{ matrix.platform }}
+    name: Build (${{ matrix.label }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: web/package.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev \
+            libgtk-3-dev
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm install
+
+      - name: Build web frontend
+        working-directory: web
+        run: npx vite build
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller
+
+      - name: Build Python backend (PyInstaller)
+        working-directory: src-tauri/src/sidecar
+        run: |
+          pyinstaller --noconfirm --clean taskforge-backend.spec
+
+      - name: Move backend binary to sidecar location
+        shell: bash
+        run: |
+          mkdir -p src-tauri/binaries
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            cp src-tauri/src/sidecar/dist/taskforge-backend/taskforge-backend.exe \
+              src-tauri/binaries/taskforge-backend-${{ matrix.target }}.exe
+          else
+            cp src-tauri/src/sidecar/dist/taskforge-backend/taskforge-backend \
+              src-tauri/binaries/taskforge-backend-${{ matrix.target }}
+            chmod +x src-tauri/binaries/taskforge-backend-${{ matrix.target }}
+          fi
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: src-tauri
+          releaseId: ${{ github.event.inputs.release_tag || '' }}
+          args: --target ${{ matrix.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.exe
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.app
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.AppImage
+          if-no-files-found: ignore
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != ''
+    name: Create Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          find artifacts -type f | while read f; do
+            echo "- $f" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Create checksums
+        run: |
+          cd artifacts
+          find . -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" \) -exec sha256sum {} \; > ../checksums.sha256
+          cat ../checksums.sha256
+
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: checksums.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag || github.ref_name }}
+          name: TaskForge Desktop ${{ github.event.inputs.release_tag || github.ref_name }}
+          body: |
+            ## Downloads
+
+            Choose the appropriate installer for your platform:
+
+            ### Windows
+            - `taskforge_*_x64-setup.exe` (NSIS installer)
+
+            ### macOS (Apple Silicon)
+            - `taskforge_*_aarch64.dmg`
+
+            ### macOS (Intel)
+            - `taskforge_*_x64.dmg`
+
+            ### Linux
+            - `taskforge_*_amd64.deb` (Debian/Ubuntu)
+            - `taskforge_*.AppImage` (Universal)
+
+            ## Checksums
+            See `checksums.sha256` for file integrity verification.
+
+            ## Release Notes
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md).
+          draft: true
+          prerelease: false
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.msi
+            artifacts/**/*.dmg
+            artifacts/**/*.deb
+            artifacts/**/*.AppImage
+            checksums.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
