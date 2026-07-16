@@ -131,7 +131,9 @@ jobs:
           TAURI_UPDATER_PRIVATE_KEY: ${{ secrets.TAURI_UPDATER_PRIVATE_KEY }}
         with:
           projectPath: src-tauri
-          releaseId: ${{ github.event.inputs.release_tag || '' }}
+          tagName: ${{ github.ref_name }}
+          releaseName: 'TaskForge ${{ github.ref_name }}'
+          releaseBody: 'See the assets below to download and install TaskForge.'
           args: --target ${{ matrix.target }}
           updaterJsonPreferNsis: true
 
