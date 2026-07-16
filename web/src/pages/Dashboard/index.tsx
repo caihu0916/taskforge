@@ -25,7 +25,7 @@ export default function Dashboard() {
             </h2>
             <p className="text-text-secondary">
               {isAuthenticated()
-                ? `Logged in as: ${user?.username ?? 'User'}`
+                ? `Logged in as: ${user?.display_name ?? 'User'}`
                 : 'Not authenticated. Please sign in.'}
             </p>
           </div>
