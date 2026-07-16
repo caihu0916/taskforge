@@ -31,7 +31,9 @@
     },
     "deep-link": {
       "desktop": {
-        "schemes": ["taskforge"]
+        "schemes": [
+          "taskforge"
+        ]
       }
     },
     "updater": {
@@ -43,7 +45,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "dmg", "appimage", "deb"],
+    "targets": [
+      "nsis",
+      "dmg",
+      "appimage",
+      "deb",
+      "msi"
+    ],
     "externalBin": [
       "binaries/taskforge-backend"
     ],
@@ -56,7 +64,17 @@
     ],
     "windows": {
       "nsis": {
-        "languages": ["SimpChinese", "English"],
+        "languages": [
+          "SimpChinese",
+          "English"
+        ],
+        "displayLanguageSelector": true
+      },
+      "msi": {
+        "languages": [
+          "zh-CN",
+          "en-US"
+        ],
         "displayLanguageSelector": true
       }
     },
