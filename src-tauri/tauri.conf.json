@@ -94,6 +94,7 @@
       "appimage": {
         "bundleMediaFramework": false
       }
-    }
+    },
+    "createUpdaterArtifacts": true
   }
 }
