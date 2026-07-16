@@ -87,6 +87,11 @@ jobs:
             libssl-dev \
             libgtk-3-dev
 
+      - name: Install WiX Toolset (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          choco install wixtoolset --version=3.14.0 -y
+
       - name: Install web dependencies
         working-directory: web
         run: npm install
